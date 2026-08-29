@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Diagnostic</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: background-color 0.05s ease;
+        }
+
+        .dialog-box {
+            background-color: #1e1e1e;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            position: relative;
+            transform-origin: center center;
+        }
+
+        .dialog-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .dialog-header svg {
+            width: 24px;
+            height: 24px;
+            fill: #f87171;
+        }
+
+        .dialog-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .dialog-body {
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #b3b3b3;
+        }
+
+        .dialog-footer {
+            padding: 12px 20px;
+            background-color: #181818;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #2d2d2d;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 4px;
+            border: 1px solid #3d3d3d;
+            background-color: #2a2a2a;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #333333;
+        }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            border-color: #2563eb;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .install-terminal {
+            background-color: #000000;
+            color: #00ff66;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            height: 160px;
+            overflow-y: auto;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            display: none;
+            margin-top: 10px;
+        }
+
+        #glitchOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+            mix-blend-mode: hard-light;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.15), rgba(0, 255, 0, 0.05), rgba(0, 0, 255, 0.15));
+            background-size: 100% 3px, 4px 100%;
+        }
+
+        .chromatic-shift {
+            text-shadow: 2px 0 red, -2px 0 cyan;
+        }
+
+        /* Fake background elements added for visual density */
+        .ambient-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: radial-gradient(#222 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+            opacity: 0.3;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="ambient-grid" id="ambientGrid"></div>
+
+<div class="dialog-box" id="dialogBox">
+    <div class="dialog-header">
+        <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22M12 6l7.53 13H4.47M11 10v4h2v-4m-2 6v2h2v-2"/></svg>
+        <h3 id="panelTitle">System Integrity Violation</h3>
+    </div>
+    <div class="dialog-body" id="panelBody">
+        <p id="panelText">A severe unauthorized modification has been detected in the kernel. Immediate action is required to prevent total data loss.</p>
+        <div class="install-terminal" id="installTerminal"></div>
+    </div>
+    <div class="dialog-footer" id="panelFooter">
+        <button class="btn" onclick="triggerInfection()">Ignore</button>
+        <button class="btn btn-primary" onclick="triggerInfection()">Attempt Repair</button>
+    </div>
+</div>
+
+<div id="glitchOverlay"></div>
+
+<script>
+    const overlay = document.getElementById("glitchOverlay");
+    const terminal = document.getElementById("installTerminal");
+    const panelTitle = document.getElementById("panelTitle");
+    const panelText = document.getElementById("panelText");
+    const panelFooter = document.getElementById("panelFooter");
+    const dialogBox = document.getElementById("dialogBox");
+    const ambientGrid = document.getElementById("ambientGrid");
+    
+    const colorPalette = [
+        "#000000", "#ffffff", "#ff0055", "#00ffff", 
+        "#ff0000", "#111111", "#00ff00", "#ffff00", 
+        "#330033", "#f87171", "#3b82f6", "#eeeeee"
+    ];
+    
+    const fakeFiles = [
+        "C:\\Windows\\System32\\drivers\\pci.sys -> Overwriting...",
+        "Injecting payload into memory sector 0x7FF8...",
+        "Downloading remote configuration: root_kit_v2.bin [SUCCESS]",
+        "Extracting credentials from Local Storage...",
+        "Establishing persistent backdoor on port 1337...",
+        "Modifying Master Boot Record (MBR)...",
+        "Syncing local database with remote server...",
+        "Bypassing firewall rules...",
+        "Deploying kernel-level hooks...",
+        "Operation complete. Device successfully compromised."
+    ];
+
+    function triggerInfection() {
+        panelTitle.textContent = "Critical Exception: Payload Execution";
+        panelTitle.classList.add("chromatic-shift");
+        panelText.textContent = "Installing required system packages and synchronizing components...";
+        panelFooter.style.display = "none";
+        terminal.style.display = "block";
+        overlay.style.display = "block";
+        ambientGrid.style.display = "block";
+
+        let tick = 0;
+        setInterval(() => {
+            tick++;
+            const randomColor1 = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            const randomColor2 = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            
+            document.body.style.backgroundColor = randomColor1;
+            overlay.style.backgroundColor = randomColor2;
+            
+            const skewX = (Math.random() - 0.5) * 12;
+            const skewY = (Math.random() - 0.5) * 12;
+            const offsetX = (Math.random() - 0.5) * 24;
+            const offsetY = (Math.random() - 0.5) * 24;
+            const scale = 0.85 + Math.random() * 0.35;
+            
+            // Add a subtle rotation wobble to make the layout feel more unstable
+            const rotate = (Math.random() - 0.5) * 4;
+            
+            dialogBox.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale}) rotate(${rotate}deg) skew(${skewX}deg, ${skewY}deg)`;
+            overlay.style.opacity = Math.random() > 0.3 ? "0.9" : "0.5";
+
+            // Modulate grid background offset every few ticks for a shifting perspective feel
+            if (tick % 2 === 0) {
+                ambientGrid.style.backgroundPosition = `${Math.random() * 50}px ${Math.random() * 50}px`;
+            }
+        }, 45);
+
+        let index = 0;
+        const interval = setInterval(() => {
+            if (index < fakeFiles.length) {
+                let p = document.createElement("div");
+                p.textContent = "> " + fakeFiles[index];
+                terminal.appendChild(p);
+                terminal.scrollTop = terminal.scrollHeight;
+                index++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 350);
+    }
+</script>
+
+</body>
+</html>
